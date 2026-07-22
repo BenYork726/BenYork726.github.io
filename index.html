@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ben Raby — Index</title>
+<meta name="description" content="A living index of projects, written musings, and seed-stage ideas." />
+<style>
+  /* ---- Design tokens: off-white ground, dark greys, electric orange ---- */
+  :root {
+    --ink: #f2f0ec;   /* off-white ground */
+    --paper: #2b2b28; /* dark grey — primary text */
+    --term: #8ca683;  /* electric orange — accent / active pop */
+    --sage: #222222;  /* mid grey — quiet decorative tone */
+    --sans: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+  /* opacity helpers via rgba of the dark-grey text */
+  .dim60 { color: rgba(43,43,40,0.6); }
+  .dim50 { color: rgba(43,43,40,0.5); }
+  .dim40 { color: rgba(43,43,40,0.4); }
+  a { color: inherit; text-decoration: none; }
+
+  /* Hide native cursor on fine-pointer devices; custom cursor takes over */
+  @media (hover: hover) and (pointer: fine) {
+    body, a, button { cursor: none; }
+  }
+  #cursor {
+    position: fixed; top: 0; left: 0; width: 40px; height: 40px;
+    border-radius: 50%; background: #fff; mix-blend-mode: difference;
+    pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+    will-change: transform; display: none;
+  }
+
+  /* ---- Layout ---- */
+  main { max-width: 1100px; margin: 0 auto; }
+  @media (min-width: 1024px) { main { padding-left: 240px; } }
+  section, header.bio { padding: 96px 40px; }
+  section, footer { border-top: 1px solid rgba(43,43,40,0.15); }
+  header.bio { border-bottom: 1px solid rgba(43,43,40,0.15); }
+  @media (max-width: 640px) { section, header.bio { padding: 64px 24px; } }
+
+  /* ---- Side map ---- */
+  .sidemap {
+    position: fixed; left: 0; top: 0; height: 100vh; width: 240px;
+    display: none; flex-direction: column; justify-content: center;
+    padding: 0 32px; z-index: 40;
+    border-right: 1px solid rgba(43,43,40,0.15);
+    transform: translateX(-100%); opacity: 0; pointer-events: none;
+    transition: transform .6s ease, opacity .6s ease;
+  }
+  @media (min-width: 1024px) { .sidemap { display: flex; } }
+  body:not(.pre-entry) .sidemap { transform: translateX(0); opacity: 1; pointer-events: auto; }
+  .sidemap ol { list-style: none; position: relative; display: flex; flex-direction: column; gap: 8px; }
+  .spine { position: absolute; left: 20px; top: 20px; bottom: 20px; width: 1px;
+           transform: translateX(-50%); background: rgba(43,43,40,0.15); }
+  .node-btn { display: flex; align-items: center; gap: 12px; background: none; border: none;
+              text-align: left; font: inherit; }
+  .ring {
+    position: relative; z-index: 10; height: 40px; width: 40px; flex: 0 0 auto;
+    border-radius: 50%; background: var(--term); opacity: .35;
+    transition: opacity .3s ease, transform .3s ease, box-shadow .3s ease;
+  }
+  .node-label { font-family: var(--mono); font-size: 16px; letter-spacing: .15em; color: rgba(43,43,40,0.5); transition: color .2s; }
+  .node-btn:hover .ring { opacity: .6; }
+  .node-btn:hover .node-label { color: rgba(43,43,40,0.8); }
+  li.active .ring { opacity: 1; transform: scale(1.1);
+                    box-shadow: 0 0 0 4px color-mix(in srgb, var(--term) 20%, transparent); }
+  li.active .node-label { color: var(--paper); }
+  .children { display: grid; grid-template-rows: 0fr; opacity: 0; overflow: hidden;
+              transition: all .5s ease; }
+  li.active .children { grid-template-rows: 1fr; opacity: 1; }
+  .children ul { min-height: 0; list-style: none; margin-left: 20px; padding: 8px 0 0 20px;
+                 border-left: 1px solid rgba(43,43,40,0.15); }
+  .children li { display: flex; align-items: flex-start; gap: 8px; padding: 4px 0; }
+  .child-dot { height: 6px; width: 6px; margin-top: 6px; flex: 0 0 auto; border-radius: 50%; background: var(--sage); }
+  .child-title { font-family: var(--mono); font-size: 14px; line-height: 1.4; color: rgba(43,43,40,0.55);
+                 white-space: normal; overflow-wrap: break-word; max-width: 150px; }
+
+  /* ---- Header / bio ---- */
+  header.bio { padding-top: 32px; position: relative; overflow: hidden; }
+  .hero-bg-wrap {
+    position: absolute; top: 0; bottom: 0; right: 0; width: 42%; min-width: 160px;
+    z-index: 0; pointer-events: none; overflow: hidden;
+  }
+  .hero-bg {
+    display: block; width: 100%; height: 100%; object-fit: cover; object-position: right center;
+    opacity: .5;
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 30%);
+    mask-image: linear-gradient(to right, transparent, #000 30%);
+  }
+  header.bio > :not(.hero-bg-wrap) { position: relative; z-index: 1; }
+  .topnav { display: flex; flex-wrap: wrap; gap: 8px 24px; font-family: var(--mono);
+            font-size: 16px; letter-spacing: .15em; color: rgba(43,43,40,0.6); }
+  .topnav .name { color: var(--paper); }
+  .topnav .links { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px 24px; }
+  .topnav a:hover { color: var(--term); }
+  .manifesto { display: flex; flex-direction: column; align-items: flex-start; gap: 32px;
+               min-height: 60vh; justify-content: center; padding: 80px 0; }
+  .manifesto h1 { max-width: 56rem; font-size: clamp(2.25rem, 6vw, 3.75rem);
+                  font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
+  .manifesto .pop { color: var(--term); }
+  .lede { max-width: 42rem; font-family: var(--mono); font-size: 22px; line-height: 1.7; color: rgba(43,43,40,0.6); }
+
+  /* ---- Section heading ---- */
+  .heading { font-family: var(--sans); font-weight: 600; font-size: clamp(20px, 2.4vw, 26px);
+             letter-spacing: -0.01em; color: var(--paper); }
+  .heading .sl { color: var(--term); }
+  .heading .ct { color: rgba(43,43,40,0.3); }
+  .heading-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 32px; }
+  .count-line { margin-top: 6px; font-family: var(--mono); font-size: 14px; letter-spacing: .1em;
+                color: rgba(43,43,40,0.4); text-transform: uppercase; }
+  .viewtoggle { font-family: var(--mono); font-size: 16px; color: rgba(43,43,40,0.5); }
+
+  /* ---- Project grid ---- */
+  .grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  @media (min-width: 768px) { .grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) { .grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .card { position: relative; display: flex; flex-direction: column; width: 100%; min-width: 0;
+          overflow: hidden; border: 1px solid rgba(43,43,40,0.1); background: var(--ink); padding: 0;
+          font: inherit; text-align: left; container-type: inline-size; container-name: card; }
+  .card .media { position: relative; width: 100%; min-width: 0; }
+  .card .media img { display: block; width: 100%; max-width: 100%; height: auto;
+                      image-rendering: pixelated; transition: transform .5s; }
+  .card:hover .media img { transform: scale(1.05); }
+  @property --ex { syntax: "<length-percentage>"; inherits: false; initial-value: 50%; }
+  @property --ey { syntax: "<length-percentage>"; inherits: false; initial-value: 50%; }
+  .invert-overlay {
+    position: absolute; inset: 0; z-index: 5; pointer-events: none;
+    background: #fff; mix-blend-mode: difference;
+    --ex: 50%; --ey: 50%;
+    clip-path: circle(0% at var(--ex) var(--ey));
+    transition: clip-path .4s ease-out, --ex .4s ease-out, --ey .4s ease-out;
+  }
+  .invert-overlay.in { clip-path: circle(150% at var(--ex) var(--ey)); }
+  .card .fallback { position: relative; width: 100%; aspect-ratio: 4 / 3; display: flex;
+                    align-items: center; justify-content: center;
+                    border: 1px solid rgba(43,43,40,0.2); padding: 16px; }
+  .card .fallback span { text-align: center; font-family: var(--mono); font-size: 17px;
+                         letter-spacing: .03em; color: rgba(43,43,40,0.7); }
+  .lockup { padding: clamp(12px, 6cqw, 20px); }
+  .lockup .kicker { display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+                     font-family: var(--mono); font-size: clamp(11px, 3.4cqw, 14px);
+                     color: rgba(43,43,40,0.5); }
+  .lockup .kicker .ext { color: var(--sage); }
+  .card:hover .lockup .kicker .ext { color: var(--term); }
+  .lockup .ttl { display: block; margin-top: 4px; font-weight: 600; color: var(--paper);
+                 font-size: clamp(14px, 5.2cqw, 20px); line-height: 1.25;
+                 overflow-wrap: break-word; }
+  .lockup .tags { margin-top: clamp(6px, 2.4cqw, 10px); display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-family: var(--mono); font-size: clamp(10px, 2.8cqw, 13px); text-transform: uppercase;
+         letter-spacing: .08em; color: var(--sage); }
+  @container card (max-width: 200px) { .lockup .tags { display: none; } }
+
+  /* ---- Musings ---- */
+  .musing { display: grid; gap: 8px; padding: 24px 0; border-top: 1px solid rgba(43,43,40,0.1); }
+  .musing:first-child { border-top: none; }
+  @media (min-width: 768px) { .musing { grid-template-columns: 1fr 2fr; gap: 32px; } }
+  .musing .meta { display: flex; align-items: baseline; gap: 12px; }
+  .musing .cat { font-family: var(--mono); font-size: 16px; color: var(--sage); }
+  .musing .st { font-family: var(--mono); font-size: 16px; color: rgba(43,43,40,0.4); }
+  .musing h3 { font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .musing h3 a:hover { color: var(--term); }
+  .musing p { margin-top: 4px; font-size: 17px; color: rgba(43,43,40,0.6); }
+  .related { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .related a { font-family: var(--mono); font-size: 15px; color: rgba(43,43,40,0.5); }
+  .related a:hover { color: var(--term); }
+
+  /* ---- Garden ---- */
+  .garden-grid { display: grid; grid-template-columns: 1fr; gap: 12px; opacity: .9; }
+  @media (min-width: 640px) { .garden-grid { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1024px) { .garden-grid { grid-template-columns: 1fr 1fr 1fr; } }
+  .seed { border: 1px dashed rgba(43,43,40,0.3); padding: 20px; transition: border-color .2s; }
+  .seed:hover { border-color: rgba(255,106,26,0.5); }
+  .seed .st { margin-bottom: 12px; font-family: var(--mono); font-size: 14px; text-transform: uppercase; letter-spacing: .08em; color: rgba(43,43,40,0.4); }
+  .seed h3 { font-size: 26px; font-weight: 500; letter-spacing: -0.01em; color: rgba(43,43,40,0.9); }
+  .seed p { margin-top: 4px; font-size: 22px; color: rgba(43,43,40,0.5); }
+
+  /* ---- Footer ---- */
+  footer { padding: 80px 40px; font-family: var(--mono); font-size: 18px; }
+  @media (max-width: 640px) { footer { padding: 80px 24px; } }
+  footer .prompt { color: rgba(43,43,40,0.4); }
+  footer ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+  footer a { color: rgba(43,43,40,0.8); display: inline-flex; align-items: center; }
+  footer a:hover { color: var(--term); }
+  footer a .gt { color: var(--sage); }
+  footer a .us { margin-left: 2px; opacity: 0; }
+  footer a:hover .us { opacity: 1; animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,49% { opacity: 1; } 50%,100% { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+
+  /* ---- Central node (landing → projects click target) ---- */
+  .enter-node {
+    display: flex; flex-direction: column; align-items: center; gap: 10px;
+    flex: 0 0 auto; background: none; border: none; font: inherit; cursor: none;
+  }
+  .enter-node .enter-ring {
+    display: flex; align-items: center; justify-content: center; white-space: nowrap;
+    padding: clamp(14px, 1.6vw, 22px) clamp(20px, 2.4vw, 32px); border-radius: 999px;
+    border: 1px solid rgba(43,43,40,0.35); color: var(--sage);
+    font-family: var(--mono); font-size: clamp(13px, 1.3vw, 16px); letter-spacing: .1em;
+    transition: all .3s ease;
+  }
+  .enter-node:hover .enter-ring {
+    border-color: var(--term); color: var(--term); transform: scale(1.05);
+    box-shadow: 0 0 0 6px rgba(255,106,26,0.12);
+  }
+  .enter-node .enter-label {
+    font-family: var(--mono); font-size: clamp(12px, 1.1vw, 15px); letter-spacing: .15em;
+    color: rgba(43,43,40,0.5); transition: color .2s;
+  }
+  .enter-node:hover .enter-label { color: var(--term); }
+
+  /* ---- Pre-entry landing: only the hero shows until Project Library is clicked ---- */
+  body.pre-entry #projects,
+  body.pre-entry #musings,
+  body.pre-entry footer { display: none; }
+  body.pre-entry main { padding-left: 0 !important; }
+  body.pre-entry header.bio { min-height: 100vh; display: flex; flex-direction: column;
+                               justify-content: center; border-bottom: none; }
+  #projects, #musings, footer { animation: revealIn .6s ease both; }
+  @keyframes revealIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+
+  /* ---- Project detail modal (card "flip") ---- */
+  .project-modal {
+    position: fixed; inset: 0; z-index: 100;
+    padding: 0; overflow-y: auto; background: rgba(43,43,40,0.55);
+    opacity: 0; visibility: hidden; transition: opacity .3s ease, visibility 0s linear .3s;
+  }
+  .project-modal.open { opacity: 1; visibility: visible; transition: opacity .3s ease; }
+  .modal-panel {
+    width: 100%; max-width: 1100px; min-width: 0; margin: 0 auto; min-height: 100vh;
+    background: var(--ink); padding: clamp(24px, 6vw, 80px);
+    transform: translateY(24px); transition: transform .35s ease;
+  }
+  .project-modal.open .modal-panel { transform: translateY(0); }
+  .modal-close {
+    position: fixed; top: 24px; right: 24px; z-index: 101;
+    height: 44px; width: 44px; border-radius: 50%; border: 1px solid rgba(43,43,40,0.3);
+    background: var(--ink); color: var(--paper); font-size: 18px; cursor: none;
+    display: flex; align-items: center; justify-content: center; transition: all .2s ease;
+  }
+  .modal-close:hover { border-color: var(--term); color: var(--term); }
+  .modal-kicker { display: flex; align-items: baseline; gap: 12px; font-family: var(--mono);
+                  font-size: 15px; color: rgba(43,43,40,0.5); }
+  .modal-panel h2 { margin-top: 12px; font-size: clamp(28px, 4vw, 44px); font-weight: 600;
+                     letter-spacing: -0.01em; max-width: 40rem; }
+  .modal-panel .tags { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .modal-panel .subtitle { margin-top: 24px; max-width: 40rem; font-family: var(--mono);
+                            font-size: 18px; line-height: 1.7; color: rgba(43,43,40,0.7); }
+  .modal-panel .visit-link { margin-top: 24px; display: inline-flex; align-items: center; gap: 8px;
+                              font-family: var(--mono); font-size: 15px; letter-spacing: .1em;
+                              border: 1px solid rgba(43,43,40,0.35); padding: 12px 20px;
+                              border-radius: 999px; transition: all .2s ease; }
+  .modal-panel .visit-link:hover { border-color: var(--term); color: var(--term); }
+  .modal-media { margin-top: 40px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .modal-media img { width: 100%; max-width: 100%; height: auto; display: block; min-width: 0;
+                      border: 1px solid rgba(43,43,40,0.1); }
+  .modal-media .embed-wrap { position: relative; width: 100%; padding-top: 56.25%; }
+  .modal-media .embed-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .modal-media audio { width: 100%; }
+  .modal-placeholder { margin-top: 40px; font-family: var(--mono); font-size: 15px;
+                        color: rgba(43,43,40,0.4); border: 1px dashed rgba(43,43,40,0.25); padding: 24px; }
+</style>
+</head>
+<body class="pre-entry">
+<div id="cursor"></div>
+<nav class="sidemap" aria-label="Section map"><ol id="sidemap-list"></ol></nav>
+
+<main>
+  <header class="bio" id="about">
+    <div class="hero-bg-wrap" aria-hidden="true">
+      <img class="hero-bg" src="assets/projects/hero-bg.jpg" alt="" />
+    </div>
+    <div class="topnav">
+      <span class="name">A creative repository</span>
+      <div class="links">
+        <a href="#about" onclick="return navigateTo('about', event)">[ ABOUT ]</a>
+        <a href="#projects" onclick="return navigateTo('projects', event)">[ PROJECT ]</a>
+        <a href="#musings" onclick="return navigateTo('musings', event)">[ MUSINGS ]</a>
+        <a href="#contact" onclick="return navigateTo('contact', event)">[ CONTACT ]</a>
+      </div>
+    </div>
+    <div class="manifesto">
+      <h1>Ben Raby<br>Portfolio <span class="pop">2026</span></h1>
+      <button class="enter-node" type="button" onclick="navigateTo('projects')" aria-label="Enter the project index">
+        <span class="enter-ring">Project Library</span>
+        <span class="enter-label">Click to enter</span>
+      </button>
+    </div>
+    <p class="lede">Projects span from climate modelling to data visualisation and writing. Interested in ecological intelligence, story telling, and using tech for good.</p>
+  </header>
+
+  <section id="projects">
+    <div class="heading-row">
+      <div>
+        <h2 class="heading"><span class="sl">//</span> PROJECT LIBRARY</h2>
+        <div class="count-line" id="proj-count"></div>
+      </div>
+    </div>
+    <div class="grid" id="project-grid"></div>
+  </section>
+
+  <section id="musings">
+    <div class="heading-row">
+      <div>
+        <h2 class="heading"><span class="sl">//</span> WRITING AND OTHER THOUGHTS</h2>
+        <div class="count-line" id="mus-count"></div>
+      </div>
+      <div class="viewtoggle"><a href="https://medium.com/@ben-raby" target="_blank" rel="noopener">&gt;&gt; full archive on medium.com/@ben-raby</a></div>
+    </div>
+    <div class="musings" id="musings-list" style="margin-top:32px"></div>
+  </section>
+
+  <footer id="contact">
+    <div class="prompt">ben@portfolio:~$ ls ./contact</div>
+    <ul id="footer-links"></ul>
+  </footer>
+</main>
+
+<div class="project-modal" id="project-modal" aria-hidden="true">
+  <button class="modal-close" type="button" onclick="closeProject()" aria-label="Close">✕</button>
+  <div class="modal-panel" id="modal-panel"></div>
+</div>
+
+<script>
+// ---- landing reveal: entering the library unlocks the rest of the site ----
+function navigateTo(id, event) {
+  if (event) event.preventDefault();
+  document.body.classList.remove("pre-entry");
+  requestAnimationFrame(() => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  });
+  return false;
+}
+
+// ===== Single source of truth: one data array, three render surfaces =====
+const ENTRIES = [
+  { id:"03", type:"project", title:"LEAF", subtitle:"A little charity with a big ambition — restoring East Africa's coastal forest hotspot (the Somalia–Mozambique corridor) with 100% native species. Ran the most biodiverse tree-planting event in East African history in 2021, and is working toward 1 billion trees and 10,000 LEAF Champions by 2030.", category:"Ecology & Governance", tech_stack:["Strategy","Field Work"], status:"active", image_url:"assets/projects/leaf-wood-wide-web.png", tags:["Ecology"], links_to:["06","08"], url:"https://www.theleafcharity.com/", media:[
+    { type:"image", src:"assets/projects/leaf-wood-wide-web.png", alt:"The Woods Wide Web — LEAF campaign artwork with a QR code in the tree roots" }
+  ] },
+  { id:"04", type:"project", title:"EDEN", subtitle:"\"The Angel's Burden\" — a lo-fi bioacoustic board game. Place capacitive-touch habitation blocks on a CNC-carved terrain and an ESP32 feeds MaxMSP live, testing whether a Megacity's noise masks the calls that keep an ecosystem alive.", category:"Bioacoustics Game", tech_stack:["ESP32","Max/MSP","C++"], status:"active", image_url:"assets/projects/eden-hero.jpg", tags:["Acoustics"], links_to:[], url:"", media:[
+    { type:"image", src:"assets/projects/eden-hero.jpg", alt:"Eden board model with habitation blocks and terrain" },
+    { type:"image", src:"assets/projects/eden-playing.jpg", alt:"Placing a habitation block on the Eden board" },
+    { type:"image", src:"assets/projects/eden-board-edge.jpg", alt:"Copper contact pads on the board edge" },
+    { type:"image", src:"assets/projects/eden-city-corner.jpg", alt:"Copper-lined Megacity corner block" }
+  ] },
+  { id:"06", type:"project", title:"PalmAtlas", subtitle:"CaryotAtlas — an interactive Shiny app mapping global occurrence records for Caryota (fishtail palms). Filter by species, year range (1750–2020), and data-cleaning level across six biodiversity databases (GBIF, iNaturalist, BIEN, and more).", category:"Biodiversity Informatics", tech_stack:["R","Shiny"], status:"archived", image_url:"assets/projects/palmatlas-screenshot.png", tags:["Ecology"], links_to:["03"], url:"https://ben-york.shinyapps.io/CaryotAtlas/", media:[
+    { type:"image", src:"assets/projects/palmatlas-screenshot.png", alt:"CaryotAtlas app showing Caryota occurrence points on a world map" }
+  ] },
+  { id:"08", type:"project", title:"GREENLEAF OUTDOORS", subtitle:"A pixel-art field-naturalist series — real encounters with oak processionary moths, veteran-tree buttress roots, cuckoo bumblebees, and mycorrhizal networks, turned into Instagram-native stories that teach OUTDOOR observation skills.", category:"Science Communication", tech_stack:["Pixel Art","Design"], status:"active", image_url:"assets/projects/greenleaf-intro.png", tags:["Ecology","Comms"], links_to:["03"], url:"", media:[
+    { type:"image", src:"assets/projects/greenleaf-intro.png", alt:"GREENLEAF OUTDOORS intro character in a pixel-art forest" }
+  ] },
+  { id:"12", type:"project", title:"Mapgrove", subtitle:"A wearable data logger for mangrove-replanting MRV — accelerometer, gyroscope, and GPS stitched into a cap, logging motion and location straight to an SD card so replanting can be monitored and verified without a clipboard or a phone.", category:"Ecological Tooling", tech_stack:["Arduino","GPS","Hardware"], status:"active", image_url:"assets/projects/mapgrove-cap-labeled.jpg", tags:["Ecology","Tooling"], links_to:[], url:"https://github.com/BenYork726/MapGrove", media:[
+    { type:"image", src:"assets/projects/mapgrove-cap-labeled.jpg", alt:"Prototype cap wired with accelerometer, gyroscope, GPS, and abort button" },
+    { type:"image", src:"assets/projects/mapgrove-hat-worn.jpg", alt:"Second prototype hat with onboard electronics, worn in the lab" }
+  ] },
+  { id:"13", type:"project", title:"Green Innovation Catalyst", subtitle:"Black Gold: Natural Capital Intelligence — ML-powered satellite analysis that identifies Open Mosaic Habitat on brownfield sites, so developers can price their Biodiversity Net Gain risk before acquisition, not after planning submission.", category:"Cleantech Strategy", tech_stack:["Strategy","Research"], status:"active", image_url:"assets/projects/gic-cover.png", tags:["Cleantech"], links_to:[], url:"https://benyork726.github.io/black-gold-NCI/", media:[
+    { type:"image", src:"assets/projects/gic-cover.png", alt:"Black Gold app: Know your BNG cost before you commit" },
+    { type:"image", src:"assets/projects/gic-title.png", alt:"Black Gold: Natural Capital Intelligence title slide" },
+    { type:"image", src:"assets/projects/gic-bng-trap.png", alt:"The BNG statutory-credit cost trap, from on-site mitigation to statutory credits" },
+    { type:"image", src:"assets/projects/gic-current-solution.png", alt:"The current DEFRA statutory biodiversity metric spreadsheet" }
+  ] },
+  { id:"M1", type:"musing", title:"The Forest the Morning of the Fire", subtitle:"Move 37 winning essay — AI's real breakthrough in finance is measuring structural fragility, not predicting crashes, seen through an ecological lens", category:"Essay", tech_stack:["Writing"], status:"published", image_url:"", tags:["Compute","Ecology"], links_to:[], url:"https://ben-raby.medium.com/the-forest-the-morning-of-the-fire-4363d88656d6" },
+  { id:"M2", type:"musing", title:"A Habitat Nobody Designed", subtitle:"What building a BNG intelligence tool taught us about open mosaic habitat", category:"Case Study", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology","Cleantech"], links_to:["13"], url:"https://ben-raby.medium.com/a-habitat-nobody-designed-what-building-a-bng-intelligence-tool-taught-us-about-open-mosaic-bfb828c49538" },
+  { id:"M3", type:"musing", title:"We Made a Bladeless Fan Hat", subtitle:"Building Breezeguard, a mosquito-deterrent hat — and what two creative geniuses said about it", category:"Design Note", tech_stack:["Writing"], status:"published", image_url:"", tags:["Design","Hardware"], links_to:[], url:"https://ben-raby.medium.com/we-made-a-bladeless-fan-hat-and-two-creative-geniuses-said-this-a0c089b45dc9" },
+  { id:"M4", type:"musing", title:"A Theory of Change, and Changing", subtitle:"A framework for organisational change, tested against real forest restoration work", category:"Essay", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology","Strategy"], links_to:["03"], url:"https://ben-raby.medium.com/a-theory-of-change-and-changing-846a529dedd2" },
+  { id:"M5", type:"musing", title:"On Nostalgia as a Bridge to Environmental Care", subtitle:"How childhood media nostalgia can motivate environmental protection — introducing GREENLEAF OUTDOORS", category:"Essay", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology","Comms"], links_to:["08"], url:"https://ben-raby.medium.com/on-nostalgia-as-a-bridge-to-environmental-care-ee5dde3dfc40" },
+  { id:"M6", type:"musing", title:"The Urban Nature Network Conference", subtitle:"Notes from a Natural History Museum conference connecting urban ecology and citizen science across London", category:"Field Note", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology"], links_to:[], url:"https://ben-raby.medium.com/the-urban-nature-network-conference-fbe761352ebd" },
+  { id:"M7", type:"musing", title:"5 Tips for Ecological Organisational Success", subtitle:"Practical recommendations from an experienced field naturalist and organisational leader", category:"Field Note", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology"], links_to:[], url:"https://ben-raby.medium.com/the-biological-recording-companys-5-tips-for-ecological-organisational-success-81448d6ebc58" },
+  { id:"M8", type:"musing", title:"Wakehurst | Kew Gardens", subtitle:"An open day at their cutting-edge Ecosystem Observatory, investigating carbon cycling, pollination, and nature connectedness", category:"Field Note", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology"], links_to:[], url:"https://ben-raby.medium.com/wakehurst-kew-gardens-an-open-day-at-their-cutting-edge-ecosystem-observatory-c22a564625c0" },
+  { id:"M9", type:"musing", title:"Chromatic Confessions of Salt-Stressed Plants", subtitle:"Written for the Linnean Society — how AI can read the colour signatures of stressed leaves, learning to see between the lines of a plant's response to salt", category:"Essay", tech_stack:["Writing"], status:"published", image_url:"", tags:["Ecology","Compute"], links_to:[], url:"https://www.linnean.org/news/2025/07/03/chromatic-confessions-of-salt-stressed-plants-ai-to-read-between-the-leaves" },
+  { id:"G1", type:"idea", title:"Calendar-First Phone OS", subtitle:"ADHD-friendly OS concept with a draggable analog-clock timer", category:"Garden", tech_stack:["React"], status:"seed", image_url:"/assets/pixel-calendaros.png", tags:["Tooling"], links_to:[] },
+  { id:"G2", type:"idea", title:"Node-Based Agent Interface", subtitle:"Hackathon concept for a visual agentic-AI canvas", category:"Garden", tech_stack:["React"], status:"seed", image_url:"/assets/pixel-nodeagent.png", tags:["Tooling","Compute"], links_to:[] },
+  { id:"G3", type:"idea", title:"Smart QR Keyring", subtitle:"Bio-epoxy keyring with a digital-biological growth mechanic", category:"Garden", tech_stack:["Materials","Hardware"], status:"seed", image_url:"/assets/pixel-keyring.png", tags:["Ecology","Tooling"], links_to:[] },
+  { id:"G4", type:"idea", title:"Workspace Passport", subtitle:"Productivity tracker concept", category:"Garden", tech_stack:["React"], status:"seed", image_url:"/assets/pixel-passport.png", tags:["Tooling"], links_to:[] },
+  { id:"G5", type:"idea", title:"Ben's Field Guide", subtitle:"Reusable project-management scaffold — structured markdown plus a Claude Code agent layer", category:"Garden", tech_stack:["Markdown","Claude Code"], status:"seed", image_url:"/assets/pixel-fieldguide.png", tags:["Tooling"], links_to:[] },
+  { id:"G6", type:"idea", title:"Sports Discovery App", subtitle:"Recommendation concept for finding sports to watch", category:"Garden", tech_stack:["React"], status:"seed", image_url:"/assets/pixel-sports.png", tags:["Tooling"], links_to:[] }
+];
+
+// ---- selectors (type filtering is mandatory) ----
+const projects = ENTRIES.filter(e => e.type === "project");
+const musings  = ENTRIES.filter(e => e.type === "musing");
+const ideas    = ENTRIES.filter(e => e.type === "idea");
+const byId = id => ENTRIES.find(e => e.id === id);
+const deriveIndex = id => String(projects.findIndex(p => p.id === id) + 1).padStart(2, "0");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+
+// ---- project detail modal: cards "flip" open to a full-width scrollable explainer ----
+const projectModal = document.getElementById("project-modal");
+const modalPanel = document.getElementById("modal-panel");
+
+function renderMediaBlock(block) {
+  if (block.type === "image") return `<img src="${esc(block.src)}" alt="${esc(block.alt || "")}" />`;
+  if (block.type === "audio") return `<audio controls src="${esc(block.src)}"></audio>`;
+  if (block.type === "embed") return `<div class="embed-wrap"><iframe src="${esc(block.src)}" allowfullscreen loading="lazy"></iframe></div>`;
+  return "";
+}
+
+function openProject(id) {
+  const p = byId(id);
+  if (!p) return;
+  const idx = deriveIndex(p.id);
+  const tags = p.tags.map(t => `<span class="tag">[ ${esc(t)} ]</span>`).join("");
+  const media = (p.media || []).map(renderMediaBlock).join("");
+  modalPanel.innerHTML = `
+    <div class="modal-kicker"><span>[${idx}]</span><span>${esc(p.category)}</span><span>${esc(p.status)}</span></div>
+    <h2>${esc(p.title)}</h2>
+    <div class="tags">${tags}</div>
+    <p class="subtitle">${esc(p.subtitle)}</p>
+    ${p.url ? `<a class="visit-link" href="${esc(p.url)}" target="_blank" rel="noopener">Visit live site ↗</a>` : ""}
+    ${media ? `<div class="modal-media">${media}</div>` : `<div class="modal-placeholder">More on this project — images, video, and audio — coming soon.</div>`}
+  `;
+  projectModal.classList.add("open");
+  projectModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  modalPanel.scrollTop = 0;
+}
+
+function closeProject() {
+  projectModal.classList.remove("open");
+  projectModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+projectModal.addEventListener("click", e => { if (e.target === projectModal) closeProject(); });
+window.addEventListener("keydown", e => { if (e.key === "Escape") closeProject(); });
+
+// ---- render: project grid (with image fallback) ----
+document.getElementById("proj-count").textContent = projects.length + (projects.length === 1 ? " project" : " projects");
+document.getElementById("project-grid").innerHTML = projects.map(p => {
+  const idx = deriveIndex(p.id);
+  const tags = p.tags.map(t => `<span class="tag">[ ${esc(t)} ]</span>`).join("");
+  return `<button class="card" type="button" data-id="${p.id}" onclick="openProject('${p.id}')">
+    <div class="media">
+      <img src="${esc(p.image_url)}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex';" />
+      <div class="fallback" style="display:none"><span>${esc(p.title)}</span></div>
+      <div class="invert-overlay"></div>
+    </div>
+    <div class="lockup">
+      <div class="kicker"><span>[${idx}]</span><span>${esc(p.status)}${p.url ? ` <a class="ext" href="${esc(p.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">↗</a>` : ""}</span></div>
+      <span class="ttl">${esc(p.title)}</span>
+      <div class="tags">${tags}</div>
+    </div>
+  </button>`;
+}).join("");
+
+// ---- card hover: spreading inversion from the pointer's entry point ----
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  document.querySelectorAll("#project-grid .card .media").forEach(media => {
+    const overlay = media.querySelector(".invert-overlay");
+    const setPoint = e => {
+      const r = media.getBoundingClientRect();
+      overlay.style.setProperty("--ex", `${e.clientX - r.left}px`);
+      overlay.style.setProperty("--ey", `${e.clientY - r.top}px`);
+    };
+    media.addEventListener("pointerenter", e => {
+      // snap the center to the entry point (no glide from the last leave point)
+      overlay.style.transition = "none";
+      setPoint(e);
+      void overlay.offsetWidth;
+      overlay.style.transition = "";
+      overlay.classList.add("in");
+    });
+    media.addEventListener("pointerleave", e => { setPoint(e); overlay.classList.remove("in"); });
+  });
+}
+
+// ---- render: musings ----
+document.getElementById("mus-count").textContent = musings.length + " pieces of work";
+document.getElementById("musings-list").innerHTML = musings.map(m => {
+  const related = m.links_to.map(id => byId(id))
+    .filter(t => t && t.type === "project")
+    .map(t => `<a href="#projects">↳ ${esc(t.title)}</a>`).join("");
+  return `<div class="musing">
+    <div class="meta"><span class="cat">${esc(m.category)}</span><span class="st">${esc(m.status)}</span></div>
+    <div>
+      <h3>${m.url ? `<a href="${esc(m.url)}" target="_blank" rel="noopener">${esc(m.title)} ↗</a>` : esc(m.title)}</h3>
+      <p>${esc(m.subtitle)}</p>
+      ${related ? `<div class="related">${related}</div>` : ""}
+    </div>
+  </div>`;
+}).join("");
+
+// ---- render: footer links ----
+const LINKS = [
+  { label: "github", href: "https://github.com/BenYork726" },
+  { label: "linkedin", href: "https://www.linkedin.com/in/ben-raby/" },
+  { label: "email", href: "mailto:benraby726@gmail.com" }
+];
+document.getElementById("footer-links").innerHTML = LINKS.map(l =>
+  `<li><a href="${l.href}"><span class="gt">&gt; </span>${l.label}<span class="us">_</span></a></li>`).join("");
+
+// ---- side map (rail + scrollspy + active expand) ----
+const SECTIONS = [
+  { id:"about",    label:"About",    children:[] },
+  { id:"projects", label:"Projects", children:projects },
+  { id:"musings",  label:"Musings",  children:musings },
+  { id:"contact",  label:"Contact",  children:[] }
+];
+document.getElementById("sidemap-list").innerHTML =
+  `<span class="spine"></span>` + SECTIONS.map(s => {
+    const kids = s.children.map(c =>
+      `<li><span class="child-dot"></span><span class="child-title">${esc(c.title)}</span></li>`).join("");
+    return `<li data-section="${s.id}">
+      <button class="node-btn" onclick="navigateTo('${s.id}')">
+        <span class="ring"></span><span class="node-label">${s.label}</span>
+      </button>
+      <div class="children"><ul>${kids}</ul></div>
+    </li>`;
+  }).join("");
+
+const navItems = Array.from(document.querySelectorAll('.sidemap li[data-section]'));
+const setActive = id => navItems.forEach(li =>
+  li.classList.toggle('active', li.dataset.section === id));
+setActive('about');
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); });
+}, { rootMargin: "-35% 0px -60% 0px", threshold: 0 });
+SECTIONS.forEach(s => { const el = document.getElementById(s.id); if (el) observer.observe(el); });
+
+// ---- scrollspy fallback: short last sections (like the footer) may never
+// satisfy the observer's middle-band margins, so force it active at page-bottom ----
+const lastSectionId = SECTIONS[SECTIONS.length - 1].id;
+window.addEventListener("scroll", () => {
+  const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2;
+  if (atBottom) setActive(lastSectionId);
+}, { passive: true });
+
+// ---- custom inversion cursor (desktop only; touch keeps native cursor) ----
+if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+  const cur = document.getElementById("cursor");
+  cur.style.display = "block";
+  window.addEventListener("pointermove", e => {
+    cur.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+  });
+}
+
+</script>
+</body>
+</html>
