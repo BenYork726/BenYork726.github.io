@@ -114,7 +114,10 @@
   .manifesto h1 { max-width: 56rem; font-size: clamp(2.25rem, 6vw, 3.75rem);
                   font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
   .manifesto .pop { color: var(--term); }
-  .lede { max-width: 42rem; font-family: var(--mono); font-size: 22px; line-height: 1.7; color: rgba(43,43,40,0.6); }
+  .lede { max-width: 42rem; width: fit-content; font-family: var(--mono); font-size: 22px;
+          line-height: 1.7; color: rgba(43,43,40,0.6);
+          background: rgba(242,240,236,0.72); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px);
+          padding: 18px 22px; margin: -18px -22px; border-radius: 14px; }
 
   /* ---- Section heading ---- */
   .heading { font-family: var(--sans); font-weight: 600; font-size: clamp(20px, 2.4vw, 26px);
