@@ -89,7 +89,11 @@
   /* ---- Header / bio ---- */
   header.bio { padding-top: 32px; position: relative; overflow: hidden; }
   .hero-bg-wrap {
-    position: absolute; top: 0; bottom: 0; right: 0; width: 42%; min-width: 160px;
+    /* main is centered with max-width:1100px, so header.bio's own right edge stops
+       short of the true viewport edge once the window is wider than that; pull the
+       wrap back out to the real edge instead of main's constrained column */
+    position: absolute; top: 0; bottom: 0; right: min(0px, calc((1100px - 100vw) / 2));
+    width: 42%; min-width: 160px;
     z-index: 0; pointer-events: none; overflow: hidden;
   }
   .hero-bg {
@@ -364,7 +368,7 @@ const ENTRIES = [
   { id:"06", type:"project", title:"PalmAtlas", subtitle:"CaryotAtlas — an interactive Shiny app mapping global occurrence records for Caryota (fishtail palms), built during an Erasmus exchange in Aarhus. Pulls records from GBIF, iNaturalist, and ALA, then cross-references them against the World Checklist's species distributions — surfacing where recorded occurrences no longer match what's reported, so ecologists can spot gaps in the official record. Filter by species, year range, and data-cleaning level, and download the dataset you create.", detail:"My first foray into coding — built with Shiny in R.", category:"Biodiversity Informatics", tech_stack:["R","Shiny"], status:"archived", image_url:"assets/projects/palmatlas-screenshot.png", tags:["Ecology"], links_to:["03"], url:"https://ben-york.shinyapps.io/CaryotAtlas/", media:[
     { type:"image", src:"assets/projects/palmatlas-screenshot.png", alt:"CaryotAtlas app showing Caryota occurrence points on a world map" }
   ] },
-  { id:"08", type:"project", title:"GREENLEAF OUTDOORS", subtitle:"A pixel-art field-naturalist series built on a simple idea: use nostalgia to get people back outdoors, and fix the idea that the outdoors isn't someone else's — it's yours too, wherever you are. Told through stories from a summer season as a Forestry Commission field surveyor, each piece is a small nudge back in tune with the nature on your own doorstep.", detail:"Originally conceived as the front end of a larger system — see Mapgrove.", category:"Science Communication", tech_stack:["Pixel Art","Design"], status:"active", image_url:"assets/projects/greenleaf-intro.png", tags:["Ecology","Comms"], links_to:["03"], url:"", media:[
+  { id:"08", type:"project", title:"GREENLEAF OUTDOORS", subtitle:"A pixel-art field-naturalist series built on a simple idea: use nostalgia to get people back outdoors, and fix the idea that the outdoors isn't someone else's — it's yours too, wherever you are. Told through stories from a summer season as a Forestry Commission field surveyor, each piece is a small nudge back in tune with the nature on your own doorstep.", detail:"Part of a larger system still taking shape — get in touch to hear more.", category:"Science Communication", tech_stack:["Pixel Art","Design"], status:"active", image_url:"assets/projects/greenleaf-intro.png", tags:["Ecology","Comms"], links_to:["03"], url:"", media:[
     { type:"image", src:"assets/projects/greenleaf-intro.png", alt:"GREENLEAF OUTDOORS intro character in a pixel-art forest" }
   ] },
   { id:"12", type:"project", title:"Mapgrove", subtitle:"A wearable data logger for mangrove-replanting MRV (monitoring, reporting, and verification) — an accelerometer, gyroscope, and GPS stitched into a band worn around any hat, logging motion and location straight to an SD card the moment a planting action happens. Replanting can be monitored and verified without a clipboard or a phone.", detail:"This expands access to the first stage of MRV programmes — the step that unlocks carbon credits — for communities without access to the expert help usually needed to set up initial forest maps.", category:"Ecological Tooling", tech_stack:["Arduino","GPS","Hardware"], status:"active", image_url:"assets/projects/mapgrove-cap-labeled.jpg", tags:["Ecology","Tooling"], links_to:[], url:"https://github.com/BenYork726/MapGrove", media:[
