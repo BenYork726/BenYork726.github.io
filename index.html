@@ -91,9 +91,10 @@
   .hero-bg-wrap {
     /* main is centered with max-width:1100px, so header.bio's own right edge stops
        short of the true viewport edge once the window is wider than that; pull the
-       wrap back out to the real edge instead of main's constrained column */
+       wrap back out to the real edge instead of main's constrained column. Width is
+       in vw (not %) so it's sized off the true window too, not the capped column. */
     position: absolute; top: 0; bottom: 0; right: min(0px, calc((1100px - 100vw) / 2));
-    width: 42%; min-width: 160px;
+    width: 42vw; min-width: 160px;
     z-index: 0; pointer-events: none; overflow: hidden;
   }
   .hero-bg {
